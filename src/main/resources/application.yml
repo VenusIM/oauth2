@@ -1,0 +1,18 @@
+server:
+  servlet:
+    encoding:
+      enabled: true
+      force: true
+      charset: UTF-8
+  shutdown: graceful
+
+spring:
+  profiles:
+    include: oauth
+    active: test
+
+mybatis:
+  mapper-locations: classpath*:mybatis/**/*.xml
+
+# jwt secret key 설정
+jwt.secret: ENC(3i/5RMkRtVFoOIbcVwhii1G4e4cB4Lg4eeoRW++hUdsfhJ076X0y6YN2s3JDbpsragCiyfo+Y73duXwhZ6QcRqfNYvk/IXYkO97jHXyEHN4=)

@@ -1,0 +1,7 @@
+POST http://localhost:9000/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "id": 123,
+  "password": "123"
+}

@@ -1,0 +1,16 @@
+{
+  "properties" : [
+    {
+      "name" : "spring.redis.isUsed",
+      "type" : "java.lang.Boolean"
+    },
+    {
+      "name" : "log-directory",
+      "type" : "java.lang.String"
+    },
+    {
+      "name" : "jwt.secret",
+      "type" : "java.lang.String"
+    }
+  ]
+}
