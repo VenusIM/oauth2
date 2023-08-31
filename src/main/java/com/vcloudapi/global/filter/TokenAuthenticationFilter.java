@@ -30,7 +30,7 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
         if(!request.getRequestURI().startsWith("/h2-console") && !request.getRequestURI().startsWith("/favicon.ico")) {
             String tokenStr = HeaderUtil.getAccessToken(request);
             AuthToken token = tokenProvider.convertAuthToken(tokenStr);
-
+            log.info("Auth Token : {}", token.getToken());
             if (token.validate()) {
                 Authentication authentication = tokenProvider.getAuthentication(token);
                 SecurityContextHolder.getContext().setAuthentication(authentication);

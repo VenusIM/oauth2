@@ -1,4 +1,4 @@
-package com.vcloudapi.member.dto.auth;
+package com.vcloudapi.api.member.dto.auth;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

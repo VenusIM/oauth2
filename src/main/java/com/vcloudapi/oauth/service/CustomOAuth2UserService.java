@@ -1,14 +1,14 @@
 package com.vcloudapi.oauth.service;
 
-import com.vcloudapi.member.dto.user.User;
-import com.vcloudapi.member.mapper.UserMapper;
+import com.vcloudapi.api.member.dto.user.User;
+import com.vcloudapi.api.member.mapper.UserMapper;
 import com.vcloudapi.oauth.entity.ProviderType;
 import com.vcloudapi.oauth.entity.RoleType;
 import com.vcloudapi.oauth.entity.UserPrincipal;
 import com.vcloudapi.global.exception.OAuthProviderMissMatchException;
+import com.vcloudapi.oauth.info.OAuth2Info;
 import com.vcloudapi.oauth.info.OAuth2UserInfo;
 import com.vcloudapi.oauth.info.OAuth2UserInfoFactory;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
@@ -21,7 +21,6 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.security.Provider;
 import java.time.LocalDateTime;
 import java.util.Map;
 
@@ -31,22 +30,15 @@ import java.util.Map;
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     private UserMapper userMapper;
-    private RedisTemplate<String, Map<String, String>> redisTemplate;
-    private ValueOperations<String, Map<String, String>> valueOperations;
-    public CustomOAuth2UserService(UserMapper userMapper, RedisTemplate<String, Map<String, String>> redisTemplate) {
-        this.userMapper = userMapper;
-        this.redisTemplate = redisTemplate;
-        if(redisTemplate != null) {
-            valueOperations = redisTemplate.opsForValue();
-        }
-    }
+    private RedisTemplate<String, OAuth2Info> redisTemplate;
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
         OAuth2User user = super.loadUser(userRequest);
 
         try {
-            return this.process(userRequest, user);
+            OAuth2User auth2User = this.process(userRequest, user);
+            return auth2User;
         } catch (AuthenticationException ex) {
             throw ex;
         } catch (Exception ex) {
@@ -61,9 +53,18 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         log.info("======= process userInfo ========");
         log.info(userInfo.getAttributes().toString());
         log.info("======= process userInfo end ========");
+
+
         // https://devtalk.kakao.com/t/id/124958 reference
-        User savedUser =null;
-                valueOperations.get(userInfo.getId());
+        OAuth2Info oAuth2Info = redisTemplate.opsForValue().get(userInfo.getId());
+
+        User savedUser = null;
+        if(oAuth2Info != null) {
+            savedUser = oAuth2Info.getUser();
+        } else {
+            oAuth2Info = OAuth2Info.builder(userRequest.getAccessToken().getTokenValue(), userRequest.getAccessToken().getExpiresAt().toEpochMilli())
+                    .build();
+        }
 
         if (savedUser != null) {
             if (providerType != savedUser.getProviderType()) {
@@ -86,7 +87,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                 userInfo.getId(),
                 userInfo.getName(),
                 userInfo.getEmail(),
-                "Y",
                 userInfo.getImageUrl(),
                 providerType,
                 RoleType.USER,
@@ -94,19 +94,14 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                 now
         );
 
+//        userMapper.insertOAuthUser(user);
         //TODO Redis
+//        redisTemplate.opsForValue().set(user.getUserId(), );
 
         return user;
     }
 
     private User updateUser(User user, OAuth2UserInfo userInfo) {
-        if (userInfo.getName() != null && !user.getUsername().equals(userInfo.getName())) {
-            user.setUsername(userInfo.getName());
-        }
-
-        if (userInfo.getImageUrl() != null && !user.getProfileImageUrl().equals(userInfo.getImageUrl())) {
-            user.setProfileImageUrl(userInfo.getImageUrl());
-        }
 
         //TODO Redis
 

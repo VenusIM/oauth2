@@ -1,6 +1,6 @@
-package com.vcloudapi.member.controller.auth;
+package com.vcloudapi.api.member.controller.auth;
 
-import com.vcloudapi.member.dto.auth.AuthReqModel;
+import com.vcloudapi.api.member.dto.auth.AuthReqModel;
 import com.vcloudapi.global.ApiResponse;
 import com.vcloudapi.global.config.properties.AppProperties;
 import com.vcloudapi.oauth.entity.RoleType;

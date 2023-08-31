@@ -1,4 +1,4 @@
-package com.vcloudapi.member.dto.user;
+package com.vcloudapi.api.member.dto.user;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;

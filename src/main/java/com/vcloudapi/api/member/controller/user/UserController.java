@@ -1,6 +1,6 @@
-package com.vcloudapi.member.controller.user;
+package com.vcloudapi.api.member.controller.user;
 
-import com.vcloudapi.member.service.UserService;
+import com.vcloudapi.api.member.service.UserService;
 import com.vcloudapi.global.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;

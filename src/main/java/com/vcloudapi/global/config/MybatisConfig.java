@@ -15,7 +15,7 @@ import javax.sql.DataSource;
 
 @Configuration
 @EnableTransactionManagement
-@MapperScan(basePackages = {"com.vcloudapi.member.mapper"})
+@MapperScan(basePackages = {"com.vcloudapi.api.member.mapper"})
 public class MybatisConfig {
 
     @Value("${mybatis.mapper-locations}")

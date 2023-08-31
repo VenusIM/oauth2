@@ -1,6 +1,6 @@
 package com.vcloudapi.global.handler;
 
-import com.vcloudapi.oauth.repository.OAuth2AuthorizationRequestBasedOnCookieRepository;
+import com.vcloudapi.oauth.repository.CustomAuthorizationRequestRepository;
 import com.vcloudapi.utils.CookieUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.AuthenticationException;
@@ -14,14 +14,14 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-import static com.vcloudapi.oauth.repository.OAuth2AuthorizationRequestBasedOnCookieRepository.REDIRECT_URI_PARAM_COOKIE_NAME;
+import static com.vcloudapi.oauth.repository.CustomAuthorizationRequestRepository.REDIRECT_URI_PARAM_COOKIE_NAME;
 
 
 @Component
 @RequiredArgsConstructor
 public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationFailureHandler {
 
-    private final OAuth2AuthorizationRequestBasedOnCookieRepository authorizationRequestRepository;
+    private final CustomAuthorizationRequestRepository authorizationRequestRepository;
 
     @Override
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) throws IOException {

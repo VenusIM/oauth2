@@ -5,13 +5,15 @@ import com.vcloudapi.oauth.entity.ProviderType;
 import com.vcloudapi.oauth.entity.RoleType;
 import com.vcloudapi.oauth.info.OAuth2UserInfo;
 import com.vcloudapi.oauth.info.OAuth2UserInfoFactory;
-import com.vcloudapi.oauth.repository.OAuth2AuthorizationRequestBasedOnCookieRepository;
+import com.vcloudapi.oauth.repository.CustomAuthorizationRequestRepository;
 import com.vcloudapi.oauth.token.AuthToken;
 import com.vcloudapi.oauth.token.AuthTokenProvider;
 import com.vcloudapi.utils.CookieUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
@@ -28,8 +30,8 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Optional;
 
-import static com.vcloudapi.oauth.repository.OAuth2AuthorizationRequestBasedOnCookieRepository.REDIRECT_URI_PARAM_COOKIE_NAME;
-import static com.vcloudapi.oauth.repository.OAuth2AuthorizationRequestBasedOnCookieRepository.REFRESH_TOKEN;
+import static com.vcloudapi.oauth.repository.CustomAuthorizationRequestRepository.REDIRECT_URI_PARAM_COOKIE_NAME;
+import static com.vcloudapi.oauth.repository.CustomAuthorizationRequestRepository.REFRESH_TOKEN;
 
 @Component
 @RequiredArgsConstructor
@@ -37,19 +39,20 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
     private final AuthTokenProvider tokenProvider;
     private final AppProperties appProperties;
-    private final OAuth2AuthorizationRequestBasedOnCookieRepository authorizationRequestRepository;
+    private final CustomAuthorizationRequestRepository authorizationRequestRepository;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {
         String targetUrl = determineTargetUrl(request, response, authentication);
 
         if (response.isCommitted()) {
-            logger.debug("Response has already been committed. Unable to redirect to " + targetUrl);
+            logger.debug("Response has already been committed. Unable to redirect to " + getDefaultTargetUrl());
             return;
         }
 
         clearAuthenticationAttributes(request, response);
-        getRedirectStrategy().sendRedirect(request, response, targetUrl);
+//        targetUrl = getDefaultTargetUrl();
+        getRedirectStrategy().sendRedirect(request, response, "/api/main");
     }
 
     protected String determineTargetUrl(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
@@ -67,7 +70,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
         OidcUser user = ((OidcUser) authentication.getPrincipal());
         OAuth2UserInfo userInfo = OAuth2UserInfoFactory.getOAuth2UserInfo(providerType, user.getAttributes());
-        Collection<? extends GrantedAuthority> authorities = ((OidcUser) authentication.getPrincipal()).getAuthorities();
+        Collection<? extends GrantedAuthority> authorities = user.getAuthorities();
 
         RoleType roleType = hasAuthority(authorities, RoleType.ADMIN.getCode()) ? RoleType.ADMIN : RoleType.USER;
 
@@ -81,20 +84,22 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         // refresh 토큰 설정
         long refreshTokenExpiry = appProperties.getAuth().getRefreshTokenExpiry();
 
-        AuthToken refreshToken = tokenProvider.createAuthToken(
-                appProperties.getAuth().getTokenSecret(),
-                new Date(now.getTime() + refreshTokenExpiry)
-        );
+//        AuthToken refreshToken = tokenProvider.createAuthToken(
+//                appProperties.getAuth().getTokenSecret(),
+//                new Date(now.getTime() + refreshTokenExpiry)
+//        );
 
         // TODO REDIS Refresh Token
 
-        int cookieMaxAge = (int) refreshTokenExpiry / 60;
+//        int cookieMaxAge = (int) refreshTokenExpiry / 60;
+//
+//        CookieUtil.deleteCookie(request, response, REFRESH_TOKEN);
+//        CookieUtil.addCookie(response, REFRESH_TOKEN, refreshToken.getToken(), cookieMaxAge);
 
-        CookieUtil.deleteCookie(request, response, REFRESH_TOKEN);
-        CookieUtil.addCookie(response, REFRESH_TOKEN, refreshToken.getToken(), cookieMaxAge);
+        response.setHeader(HttpHeaders.AUTHORIZATION, "Bearer "+accessToken);
 
         return UriComponentsBuilder.fromUriString(targetUrl)
-                .queryParam(OAuth2ParameterNames.RESPONSE_TYPE, accessToken.getToken())
+                .queryParam(OAuth2ParameterNames.ACCESS_TOKEN, accessToken.getToken())
                 .build().toUriString();
     }
 

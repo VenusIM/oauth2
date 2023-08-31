@@ -8,7 +8,7 @@ import com.vcloudapi.global.filter.TokenAuthenticationFilter;
 import com.vcloudapi.global.handler.OAuth2AuthenticationFailureHandler;
 import com.vcloudapi.global.handler.OAuth2AuthenticationSuccessHandler;
 import com.vcloudapi.global.handler.TokenAccessDeniedHandler;
-import com.vcloudapi.oauth.repository.OAuth2AuthorizationRequestBasedOnCookieRepository;
+import com.vcloudapi.oauth.repository.CustomAuthorizationRequestRepository;
 import com.vcloudapi.oauth.service.CustomOAuth2UserService;
 import com.vcloudapi.oauth.service.CustomUserDetailsService;
 import com.vcloudapi.oauth.token.AuthTokenProvider;
@@ -21,11 +21,9 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.BeanIds;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProvider;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProviderBuilder;
@@ -33,11 +31,14 @@ import org.springframework.security.oauth2.client.endpoint.DefaultAuthorizationC
 import org.springframework.security.oauth2.client.endpoint.OAuth2AccessTokenResponseClient;
 import org.springframework.security.oauth2.client.endpoint.OAuth2AuthorizationCodeGrantRequest;
 import org.springframework.security.oauth2.client.http.OAuth2ErrorResponseErrorHandler;
+import org.springframework.security.oauth2.client.oidc.web.logout.OidcClientInitiatedLogoutSuccessHandler;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizedClientManager;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizedClientRepository;
 import org.springframework.security.oauth2.core.http.converter.OAuth2AccessTokenResponseHttpMessageConverter;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
+import org.springframework.security.web.server.authentication.logout.ServerLogoutSuccessHandler;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsUtils;
@@ -91,7 +92,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                                         .accessDeniedHandler(tokenAccessDeniedHandler)
                 )
                 //
-                .authorizeRequests(expressionInterceptUrlRegistry ->
+                .authorizeRequests(expressionInterceptUrlRegistry -> 
                             expressionInterceptUrlRegistry
                                     .requestMatchers(CorsUtils::isPreFlightRequest).permitAll()
                                     // h2 db test
@@ -104,16 +105,23 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                         httpSecurityOAuth2LoginConfigurer ->
                                 httpSecurityOAuth2LoginConfigurer
                                         .authorizationEndpoint(
+                                                // base uri default /oauth2/authorization/{registrationId} Custom 가능
                                                 authorizationEndpointConfig ->
                                                     authorizationEndpointConfig.baseUri("/oauth2/authorization")
-                                                            .authorizationRequestRepository(oAuth2AuthorizationRequestBasedOnCookieRepository())
+                                                            .authorizationRequestRepository(customAuthorizationRequestRepository())
                                         )
-                                        .redirectionEndpoint(redirectionEndpointConfig ->
-                                                redirectionEndpointConfig.baseUri("/*/oauth2/code/*")
+                                        .redirectionEndpoint(
+                                                // base uri default /{action}/oauth2/callback/{registrationId}
+                                                redirectionEndpointConfig ->
+                                                        redirectionEndpointConfig.baseUri("/*/oauth2/callback/*")
                                         )
                                         // refresh token 을 담아주기 위해 custom
-                                        .tokenEndpoint(tokenEndpointConfig -> tokenEndpointConfig.accessTokenResponseClient(accessTokenResponseClient()))
-                                        .userInfoEndpoint(userInfoEndpointConfig -> userInfoEndpointConfig.userService(oAuth2UserService))
+                                        .tokenEndpoint(tokenEndpointConfig ->
+                                                tokenEndpointConfig.accessTokenResponseClient(accessTokenResponseClient())
+                                        )
+                                        .userInfoEndpoint(userInfoEndpointConfig ->
+                                                userInfoEndpointConfig.userService(oAuth2UserService)
+                                        )
                                         .successHandler(oAuth2AuthenticationSuccessHandler())
                                         .failureHandler(oAuth2AuthenticationFailureHandler())
                 )
@@ -174,6 +182,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         return new TokenAuthenticationFilter(tokenProvider);
     }
 
+    /*
+    * AuthorizedRequest
+    * */
     @Bean
     public OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest> accessTokenResponseClient() {
 
@@ -193,8 +204,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
      * 인가 응답을 연계 하고 검증할 때 사용.
      * */
     @Bean
-    public OAuth2AuthorizationRequestBasedOnCookieRepository oAuth2AuthorizationRequestBasedOnCookieRepository() {
-        return new OAuth2AuthorizationRequestBasedOnCookieRepository();
+    public CustomAuthorizationRequestRepository customAuthorizationRequestRepository() {
+        return new CustomAuthorizationRequestRepository();
     }
 
     /*
@@ -205,7 +216,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         return new OAuth2AuthenticationSuccessHandler(
                 tokenProvider,
                 appProperties,
-                oAuth2AuthorizationRequestBasedOnCookieRepository()
+                customAuthorizationRequestRepository()
         );
     }
 
@@ -214,7 +225,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
      * */
     @Bean
     public OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler() {
-        return new OAuth2AuthenticationFailureHandler(oAuth2AuthorizationRequestBasedOnCookieRepository());
+        return new OAuth2AuthenticationFailureHandler(customAuthorizationRequestRepository());
     }
 
     /*

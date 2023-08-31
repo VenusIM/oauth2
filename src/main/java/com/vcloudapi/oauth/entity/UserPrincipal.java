@@ -1,6 +1,6 @@
 package com.vcloudapi.oauth.entity;
 
-import com.vcloudapi.member.dto.user.User;
+import com.vcloudapi.api.member.dto.user.User;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
