@@ -1,4 +1,4 @@
-package com.vcloudapi.oauth.entity;
+package com.vcloudapi.oauth.vo;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

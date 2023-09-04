@@ -1,8 +1,8 @@
 package com.vcloudapi.global.handler;
 
 import com.vcloudapi.global.config.properties.AppProperties;
-import com.vcloudapi.oauth.entity.ProviderType;
-import com.vcloudapi.oauth.entity.RoleType;
+import com.vcloudapi.oauth.vo.ProviderType;
+import com.vcloudapi.oauth.vo.RoleType;
 import com.vcloudapi.oauth.info.OAuth2UserInfo;
 import com.vcloudapi.oauth.info.OAuth2UserInfoFactory;
 import com.vcloudapi.oauth.repository.CustomAuthorizationRequestRepository;
@@ -10,12 +10,9 @@ import com.vcloudapi.oauth.token.AuthToken;
 import com.vcloudapi.oauth.token.AuthTokenProvider;
 import com.vcloudapi.utils.CookieUtil;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
-import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
@@ -44,15 +41,13 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {
         String targetUrl = determineTargetUrl(request, response, authentication);
-
         if (response.isCommitted()) {
             logger.debug("Response has already been committed. Unable to redirect to " + getDefaultTargetUrl());
             return;
         }
 
         clearAuthenticationAttributes(request, response);
-//        targetUrl = getDefaultTargetUrl();
-        getRedirectStrategy().sendRedirect(request, response, "/api/main");
+        getRedirectStrategy().sendRedirect(request, response, targetUrl);
     }
 
     protected String determineTargetUrl(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
@@ -84,22 +79,21 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         // refresh 토큰 설정
         long refreshTokenExpiry = appProperties.getAuth().getRefreshTokenExpiry();
 
-//        AuthToken refreshToken = tokenProvider.createAuthToken(
-//                appProperties.getAuth().getTokenSecret(),
-//                new Date(now.getTime() + refreshTokenExpiry)
-//        );
+        AuthToken refreshToken = tokenProvider.createAuthToken(
+                appProperties.getAuth().getTokenSecret(),
+                new Date(now.getTime() + refreshTokenExpiry)
+        );
 
         // TODO REDIS Refresh Token
 
-//        int cookieMaxAge = (int) refreshTokenExpiry / 60;
-//
-//        CookieUtil.deleteCookie(request, response, REFRESH_TOKEN);
-//        CookieUtil.addCookie(response, REFRESH_TOKEN, refreshToken.getToken(), cookieMaxAge);
+        int cookieMaxAge = (int) refreshTokenExpiry / 60;
 
-        response.setHeader(HttpHeaders.AUTHORIZATION, "Bearer "+accessToken);
+        CookieUtil.deleteCookie(request, response, REFRESH_TOKEN);
+        CookieUtil.addCookie(response, REFRESH_TOKEN, refreshToken.getToken(), cookieMaxAge);
 
+        // front call back redirect url
         return UriComponentsBuilder.fromUriString(targetUrl)
-                .queryParam(OAuth2ParameterNames.ACCESS_TOKEN, accessToken.getToken())
+                .queryParam("token", accessToken.getToken())
                 .build().toUriString();
     }
 

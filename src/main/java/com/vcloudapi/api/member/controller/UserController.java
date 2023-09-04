@@ -1,4 +1,4 @@
-package com.vcloudapi.api.member.controller.user;
+package com.vcloudapi.api.member.controller;
 
 import com.vcloudapi.api.member.service.UserService;
 import com.vcloudapi.global.ApiResponse;

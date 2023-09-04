@@ -1,6 +1,6 @@
 package com.vcloudapi.oauth.info;
 
-import com.vcloudapi.oauth.entity.ProviderType;
+import com.vcloudapi.oauth.vo.ProviderType;
 import com.vcloudapi.oauth.info.impl.FacebookOAuth2UserInfo;
 import com.vcloudapi.oauth.info.impl.GoogleOAuth2UserInfo;
 import com.vcloudapi.oauth.info.impl.KakaoOAuth2UserInfo;

@@ -1,12 +1,10 @@
-package com.vcloudapi.api.member.dto.user;
+package com.vcloudapi.api.member.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.vcloudapi.oauth.entity.ProviderType;
-import com.vcloudapi.oauth.entity.RoleType;
+import com.vcloudapi.oauth.vo.ProviderType;
+import com.vcloudapi.oauth.vo.RoleType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import org.apache.ibatis.type.Alias;
 
 import java.time.LocalDateTime;

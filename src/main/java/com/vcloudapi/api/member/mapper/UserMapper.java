@@ -1,6 +1,6 @@
 package com.vcloudapi.api.member.mapper;
 
-import com.vcloudapi.api.member.dto.user.User;
+import com.vcloudapi.api.member.dto.User;
 import org.apache.ibatis.annotations.Mapper;
 
 @Mapper

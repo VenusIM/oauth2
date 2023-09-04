@@ -1,17 +1,16 @@
 package com.vcloudapi.oauth.service;
 
-import com.vcloudapi.api.member.dto.user.User;
+import com.vcloudapi.api.member.dto.User;
 import com.vcloudapi.api.member.mapper.UserMapper;
-import com.vcloudapi.oauth.entity.ProviderType;
-import com.vcloudapi.oauth.entity.RoleType;
-import com.vcloudapi.oauth.entity.UserPrincipal;
+import com.vcloudapi.oauth.vo.ProviderType;
+import com.vcloudapi.oauth.vo.RoleType;
+import com.vcloudapi.oauth.vo.UserPrincipal;
 import com.vcloudapi.global.exception.OAuthProviderMissMatchException;
 import com.vcloudapi.oauth.info.OAuth2Info;
 import com.vcloudapi.oauth.info.OAuth2UserInfo;
 import com.vcloudapi.oauth.info.OAuth2UserInfoFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
@@ -22,7 +21,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Map;
 
 @Slf4j
 @Service
@@ -56,7 +54,8 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
 
         // https://devtalk.kakao.com/t/id/124958 reference
-        OAuth2Info oAuth2Info = redisTemplate.opsForValue().get(userInfo.getId());
+        OAuth2Info oAuth2Info = null;
+//                redisTemplate.opsForValue().get(userInfo.getId());
 
         User savedUser = null;
         if(oAuth2Info != null) {

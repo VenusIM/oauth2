@@ -26,6 +26,7 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
             HttpServletRequest request,
             HttpServletResponse response,
             FilterChain filterChain)  throws ServletException, IOException {
+
         log.info("doFilterInternal >> "+request.getRequestURI());
         if(!request.getRequestURI().startsWith("/h2-console") && !request.getRequestURI().startsWith("/favicon.ico")) {
             String tokenStr = HeaderUtil.getAccessToken(request);

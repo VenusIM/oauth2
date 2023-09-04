@@ -1,12 +1,8 @@
 package com.vcloudapi.oauth.info;
 
-import com.vcloudapi.api.member.dto.user.User;
-import lombok.AccessLevel;
+import com.vcloudapi.api.member.dto.User;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.Singular;
-
-import java.util.List;
 
 @Getter
 @Builder(builderMethodName = "essentialBuilder")

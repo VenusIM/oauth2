@@ -2,7 +2,7 @@ package com.vcloudapi.global.config;
 
 import com.vcloudapi.global.config.properties.AppProperties;
 import com.vcloudapi.global.config.properties.CorsProperties;
-import com.vcloudapi.oauth.entity.RoleType;
+import com.vcloudapi.oauth.vo.RoleType;
 import com.vcloudapi.global.exception.RestAuthenticationEntryPoint;
 import com.vcloudapi.global.filter.TokenAuthenticationFilter;
 import com.vcloudapi.global.handler.OAuth2AuthenticationFailureHandler;
@@ -31,14 +31,11 @@ import org.springframework.security.oauth2.client.endpoint.DefaultAuthorizationC
 import org.springframework.security.oauth2.client.endpoint.OAuth2AccessTokenResponseClient;
 import org.springframework.security.oauth2.client.endpoint.OAuth2AuthorizationCodeGrantRequest;
 import org.springframework.security.oauth2.client.http.OAuth2ErrorResponseErrorHandler;
-import org.springframework.security.oauth2.client.oidc.web.logout.OidcClientInitiatedLogoutSuccessHandler;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizedClientManager;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizedClientRepository;
 import org.springframework.security.oauth2.core.http.converter.OAuth2AccessTokenResponseHttpMessageConverter;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
-import org.springframework.security.web.server.authentication.logout.ServerLogoutSuccessHandler;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsUtils;
@@ -98,6 +95,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                                     // h2 db test
                                     .antMatchers("/h2-console/**", "/favicon.ico/**").permitAll()
                                     .antMatchers("/api/**").hasAnyAuthority(RoleType.USER.getCode())
+                                    .antMatchers("/auth/**", "/oauth2/**").permitAll()
                                     .anyRequest().authenticated()
                 )
                 // OAuth 2 인증/인가
