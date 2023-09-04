@@ -95,7 +95,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                                     // h2 db test
                                     .antMatchers("/h2-console/**", "/favicon.ico/**").permitAll()
                                     .antMatchers("/api/**").hasAnyAuthority(RoleType.USER.getCode())
-                                    .antMatchers("/auth/**", "/oauth2/**").permitAll()
+                                    .antMatchers("/oauth2/**").permitAll()
                                     .anyRequest().authenticated()
                 )
                 // OAuth 2 인증/인가
